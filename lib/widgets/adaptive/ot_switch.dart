@@ -24,7 +24,7 @@ class OtSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return fluent.ToggleSwitch(
         checked: value,
         onChanged: onChanged,
@@ -64,7 +64,7 @@ class OtSwitchListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return Padding(
         padding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(

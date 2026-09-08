@@ -22,7 +22,7 @@ class OtCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return fluent.Checkbox(
         checked: value,
         onChanged: onChanged,
@@ -63,7 +63,7 @@ class OtCheckboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return Padding(
         padding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(

@@ -55,7 +55,7 @@ class OtTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return fluent.TextBox(
         controller: controller,
         placeholder: hintText ?? labelText,

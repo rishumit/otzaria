@@ -15,7 +15,7 @@ Future<T?> showOtzariaDialog<T>({
   bool useRootNavigator = true,
   RouteSettings? routeSettings,
 }) {
-  if (useFluentDesign(context)) {
+  if (useFluentDesign) {
     return fluent.showDialog<T>(
       context: context,
       builder: builder,
@@ -58,7 +58,7 @@ class AdaptiveAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return fluent.ContentDialog(
         title: title,
         content: content,
@@ -96,7 +96,7 @@ class AdaptiveDialogAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useFluentDesign(context)) {
+    if (useFluentDesign) {
       return isPrimary
           ? fluent.FilledButton(
               onPressed: onPressed,
