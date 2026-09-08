@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:otzaria/widgets/controls/action_buttons.dart';
 import 'package:otzaria/widgets/misc/keyboard_dialog_navigation.dart';
+import 'package:otzaria/widgets/dialogs/adaptive_dialog.dart';
 
 // ── AppDialog ─────────────────────────────────────────────────────────────────
 
@@ -125,8 +126,7 @@ class _AppDialogState extends State<AppDialog> {
       onConfirm: _handleConfirm,
       onCancel: () => Navigator.of(context).pop(false),
       handleEnterKey: widget.handleEnterKey,
-      child: AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
+      child: AdaptiveAlertDialog(
         title: widget.title is String
             ? Text(widget.title as String, textDirection: widget.textDirection)
             : widget.title as Widget,
@@ -213,7 +213,7 @@ Future<bool?> showSingleActionDialog({
   TextDirection? textDirection,
   bool barrierDismissible = true,
   bool Function()? onConfirm,
-}) => showDialog<bool>(
+}) => showAdaptiveDialog<bool>(
   context: context,
   barrierDismissible: barrierDismissible,
   builder: (_) => _withOpenerDirection(
@@ -239,7 +239,7 @@ Future<bool?> showTwoActionsDialog({
   TextDirection? textDirection,
   bool barrierDismissible = true,
   bool handleEnterKey = true,
-}) => showDialog<bool>(
+}) => showAdaptiveDialog<bool>(
   context: context,
   barrierDismissible: barrierDismissible,
   builder: (_) => _withOpenerDirection(
@@ -265,7 +265,7 @@ Future<bool?> showWarningDialog({
   String confirmText = 'איפוס',
   TextDirection? textDirection,
   bool barrierDismissible = true,
-}) => showDialog<bool>(
+}) => showAdaptiveDialog<bool>(
   context: context,
   barrierDismissible: barrierDismissible,
   builder: (_) => _withOpenerDirection(

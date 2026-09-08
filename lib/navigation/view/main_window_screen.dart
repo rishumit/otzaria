@@ -12,6 +12,8 @@ import 'package:otzaria/core/startup_timeline.dart';
 import 'package:otzaria/core/windowing/multi_window_service.dart';
 import 'package:otzaria/core/windowing/tab_drag_preview.dart';
 import 'package:otzaria/widgets/misc/rtl_icon.dart';
+import 'package:otzaria/widgets/adaptive/adaptive_widgets.dart';
+import 'package:otzaria/utils/design_system.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:collection/collection.dart';
 import 'package:otzaria/core/error_log_file.dart';
