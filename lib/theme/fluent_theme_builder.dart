@@ -1,13 +1,13 @@
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:flutter/material.dart' show ColorScheme, Brightness;
-import 'package:otzaria/theme/fluent_accent_from_seed.dart';
+import 'package:otzaria/theme/fluent/accent_from_seed.dart';
 
 /// Builds FluentThemeData from Material ColorScheme to maintain visual consistency
 /// between Material (non-Windows) and Fluent (Windows) designs.
 class FluentThemeBuilder {
   /// Creates a light Fluent theme from a Material ColorScheme.
   static fluent.FluentThemeData buildLightTheme(ColorScheme colorScheme) {
-    final accentColor = fluentAccentFromMaterialSeed(
+    final accentColor = accentFromSeed(
       colorScheme.primary,
       brightness: Brightness.light,
     );
@@ -88,7 +88,6 @@ class FluentThemeBuilder {
         }),
       ),
       toggleSwitchTheme: fluent.ToggleSwitchThemeData(
-        checkedThumbColor: fluent.ButtonState.all(colorScheme.onPrimary),
         checkedTrackDecoration: fluent.ButtonState.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled
@@ -112,7 +111,7 @@ class FluentThemeBuilder {
 
   /// Creates a dark Fluent theme from a Material ColorScheme.
   static fluent.FluentThemeData buildDarkTheme(ColorScheme colorScheme) {
-    final accentColor = fluentAccentFromMaterialSeed(
+    final accentColor = accentFromSeed(
       colorScheme.primary,
       brightness: Brightness.dark,
     );
@@ -193,7 +192,6 @@ class FluentThemeBuilder {
         }),
       ),
       toggleSwitchTheme: fluent.ToggleSwitchThemeData(
-        checkedThumbColor: fluent.ButtonState.all(colorScheme.onPrimary),
         checkedTrackDecoration: fluent.ButtonState.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled

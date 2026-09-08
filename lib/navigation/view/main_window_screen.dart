@@ -13,7 +13,7 @@ import 'package:otzaria/core/windowing/multi_window_service.dart';
 import 'package:otzaria/core/windowing/tab_drag_preview.dart';
 import 'package:otzaria/widgets/misc/rtl_icon.dart';
 import 'package:otzaria/widgets/adaptive/adaptive_widgets.dart';
-import 'package:otzaria/utils/design_system.dart';
+import 'package:otzaria/theme/design_system.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:collection/collection.dart';
 import 'package:otzaria/core/error_log_file.dart';
@@ -93,7 +93,6 @@ import 'package:otzaria/widgets/dialogs/app_dialogs.dart';
 import 'package:otzaria/widgets/navigation/nav_rail_column.dart';
 import 'package:otzaria/widgets/navigation/nav_rail_item.dart';
 import 'package:otzaria/widgets/navigation/fluent_nav_rail_column.dart';
-import 'package:otzaria/theme/design_system.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent show NavigationView, NavigationAppBar, NavigationPane, PaneDisplayMode, NavigationPaneSize;
 import 'package:otzaria/plugins/services/plugin_page_launcher.dart';
 import 'package:otzaria/plugins/services/plugin_runtime_dispatcher.dart';
@@ -3221,6 +3220,7 @@ class MainWindowScreenState extends State<MainWindowScreen>
                       resizeToAvoidBottomInset:
                           Platform.isAndroid || Platform.isIOS,
                       body: Stack(
+                        children: [
                                 // מסגרת החלון יושבת מעל ה-scrim של פאנל הכלים;
                                 // Listener פסיבי סוגר בלי לחטוף את הלחיצה.
                                 Listener(
