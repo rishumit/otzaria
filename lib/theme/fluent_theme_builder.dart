@@ -7,10 +7,7 @@ import 'package:otzaria/theme/fluent/accent_from_seed.dart';
 class FluentThemeBuilder {
   /// Creates a light Fluent theme from a Material ColorScheme.
   static fluent.FluentThemeData buildLightTheme(ColorScheme colorScheme) {
-    final accentColor = accentFromSeed(
-      colorScheme.primary,
-      brightness: Brightness.light,
-    );
+    final accentColor = accentFromSeed(colorScheme.primary, Brightness.light);
 
     return fluent.FluentThemeData.light().copyWith(
       accentColor: accentColor,
@@ -19,13 +16,13 @@ class FluentThemeBuilder {
       navigationPaneTheme: fluent.NavigationPaneThemeData(
         backgroundColor: colorScheme.surfaceContainer,
         highlightColor: accentColor.lightest,
-        selectedIconColor: fluent.ButtonState.resolveWith((states) {
+        selectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
           if (states.isPressing) return accentColor.dark;
           if (states.isHovering) return accentColor.normal;
           return accentColor.normal;
         }),
-        selectedTextStyle: fluent.ButtonState.resolveWith((states) {
+        selectedTextStyle: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.TextStyle(
             color: states.isDisabled 
                 ? colorScheme.onSurface.withValues(alpha: 0.38)
@@ -33,7 +30,7 @@ class FluentThemeBuilder {
             fontWeight: fluent.FontWeight.w600,
           );
         }),
-        unselectedIconColor: fluent.ButtonState.resolveWith((states) {
+        unselectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
           if (states.isPressing) return colorScheme.onSurface.withValues(alpha: 0.87);
           if (states.isHovering) return colorScheme.onSurface.withValues(alpha: 0.87);
@@ -42,32 +39,32 @@ class FluentThemeBuilder {
       ),
       buttonTheme: fluent.ButtonThemeData(
         defaultButtonStyle: fluent.ButtonStyle(
-          backgroundColor: fluent.ButtonState.resolveWith((states) {
+          backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
             if (states.isPressing) return colorScheme.surfaceContainerHighest;
             if (states.isHovering) return colorScheme.surfaceContainerHigh;
             return colorScheme.surfaceContainer;
           }),
-          foregroundColor: fluent.ButtonState.resolveWith((states) {
+          foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
             return colorScheme.onSurface;
           }),
         ),
         filledButtonStyle: fluent.ButtonStyle(
-          backgroundColor: fluent.ButtonState.resolveWith((states) {
+          backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
             if (states.isPressing) return accentColor.dark;
             if (states.isHovering) return accentColor.normal;
             return accentColor.normal;
           }),
-          foregroundColor: fluent.ButtonState.resolveWith((states) {
+          foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
             return colorScheme.onPrimary;
           }),
         ),
       ),
       checkboxTheme: fluent.CheckboxThemeData(
-        checkedDecoration: fluent.ButtonState.resolveWith((states) {
+        checkedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled 
                 ? colorScheme.onSurface.withValues(alpha: 0.12)
@@ -75,7 +72,7 @@ class FluentThemeBuilder {
             borderRadius: fluent.BorderRadius.circular(4),
           );
         }),
-        uncheckedDecoration: fluent.ButtonState.resolveWith((states) {
+        uncheckedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             border: fluent.Border.all(
               color: states.isDisabled
@@ -88,7 +85,7 @@ class FluentThemeBuilder {
         }),
       ),
       toggleSwitchTheme: fluent.ToggleSwitchThemeData(
-        checkedTrackDecoration: fluent.ButtonState.resolveWith((states) {
+        checkedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled
                 ? colorScheme.onSurface.withValues(alpha: 0.12)
@@ -96,8 +93,7 @@ class FluentThemeBuilder {
             borderRadius: fluent.BorderRadius.circular(12),
           );
         }),
-        uncheckedThumbColor: fluent.ButtonState.all(colorScheme.outline),
-        uncheckedTrackDecoration: fluent.ButtonState.resolveWith((states) {
+        uncheckedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled
                 ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
@@ -111,10 +107,7 @@ class FluentThemeBuilder {
 
   /// Creates a dark Fluent theme from a Material ColorScheme.
   static fluent.FluentThemeData buildDarkTheme(ColorScheme colorScheme) {
-    final accentColor = accentFromSeed(
-      colorScheme.primary,
-      brightness: Brightness.dark,
-    );
+    final accentColor = accentFromSeed(colorScheme.primary, Brightness.dark);
 
     return fluent.FluentThemeData.dark().copyWith(
       accentColor: accentColor,
@@ -123,13 +116,13 @@ class FluentThemeBuilder {
       navigationPaneTheme: fluent.NavigationPaneThemeData(
         backgroundColor: colorScheme.surfaceContainer,
         highlightColor: accentColor.lightest.withValues(alpha: 0.2),
-        selectedIconColor: fluent.ButtonState.resolveWith((states) {
+        selectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
           if (states.isPressing) return accentColor.light;
           if (states.isHovering) return accentColor.lighter;
           return accentColor.lighter;
         }),
-        selectedTextStyle: fluent.ButtonState.resolveWith((states) {
+        selectedTextStyle: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.TextStyle(
             color: states.isDisabled
                 ? colorScheme.onSurface.withValues(alpha: 0.38)
@@ -137,7 +130,7 @@ class FluentThemeBuilder {
             fontWeight: fluent.FontWeight.w600,
           );
         }),
-        unselectedIconColor: fluent.ButtonState.resolveWith((states) {
+        unselectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
           if (states.isPressing) return colorScheme.onSurface;
           if (states.isHovering) return colorScheme.onSurface;
@@ -146,32 +139,32 @@ class FluentThemeBuilder {
       ),
       buttonTheme: fluent.ButtonThemeData(
         defaultButtonStyle: fluent.ButtonStyle(
-          backgroundColor: fluent.ButtonState.resolveWith((states) {
+          backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
             if (states.isPressing) return colorScheme.surfaceContainerHighest;
             if (states.isHovering) return colorScheme.surfaceContainerHigh;
             return colorScheme.surfaceContainer;
           }),
-          foregroundColor: fluent.ButtonState.resolveWith((states) {
+          foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
             return colorScheme.onSurface;
           }),
         ),
         filledButtonStyle: fluent.ButtonStyle(
-          backgroundColor: fluent.ButtonState.resolveWith((states) {
+          backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
             if (states.isPressing) return accentColor.light;
             if (states.isHovering) return accentColor.normal;
             return accentColor.normal;
           }),
-          foregroundColor: fluent.ButtonState.resolveWith((states) {
+          foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
             return colorScheme.onPrimary;
           }),
         ),
       ),
       checkboxTheme: fluent.CheckboxThemeData(
-        checkedDecoration: fluent.ButtonState.resolveWith((states) {
+        checkedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled
                 ? colorScheme.onSurface.withValues(alpha: 0.12)
@@ -179,7 +172,7 @@ class FluentThemeBuilder {
             borderRadius: fluent.BorderRadius.circular(4),
           );
         }),
-        uncheckedDecoration: fluent.ButtonState.resolveWith((states) {
+        uncheckedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             border: fluent.Border.all(
               color: states.isDisabled
@@ -192,7 +185,7 @@ class FluentThemeBuilder {
         }),
       ),
       toggleSwitchTheme: fluent.ToggleSwitchThemeData(
-        checkedTrackDecoration: fluent.ButtonState.resolveWith((states) {
+        checkedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled
                 ? colorScheme.onSurface.withValues(alpha: 0.12)
@@ -200,8 +193,7 @@ class FluentThemeBuilder {
             borderRadius: fluent.BorderRadius.circular(12),
           );
         }),
-        uncheckedThumbColor: fluent.ButtonState.all(colorScheme.outline),
-        uncheckedTrackDecoration: fluent.ButtonState.resolveWith((states) {
+        uncheckedDecoration: fluent.WidgetStateProperty.resolveWith((states) {
           return fluent.BoxDecoration(
             color: states.isDisabled
                 ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
