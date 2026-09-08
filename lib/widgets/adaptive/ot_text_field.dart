@@ -1,7 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:otzaria/utils/design_system.dart';
+import 'package:otzaria/theme/design_system.dart';
 
 /// Adaptive text field that shows Material TextField on non-Windows platforms
 /// and Fluent TextBox on Windows.

@@ -1,6 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:flutter/material.dart';
-import 'package:otzaria/utils/design_system.dart';
+import 'package:otzaria/theme/design_system.dart';
 
 /// Adaptive switch that shows Material Switch on non-Windows platforms
 /// and Fluent ToggleSwitch on Windows.

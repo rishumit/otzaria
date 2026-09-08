@@ -213,7 +213,7 @@ Future<bool?> showSingleActionDialog({
   TextDirection? textDirection,
   bool barrierDismissible = true,
   bool Function()? onConfirm,
-}) => showAdaptiveDialog<bool>(
+}) => showOtzariaDialog<bool>(
   context: context,
   barrierDismissible: barrierDismissible,
   builder: (_) => _withOpenerDirection(
@@ -239,7 +239,7 @@ Future<bool?> showTwoActionsDialog({
   TextDirection? textDirection,
   bool barrierDismissible = true,
   bool handleEnterKey = true,
-}) => showAdaptiveDialog<bool>(
+}) => showOtzariaDialog<bool>(
   context: context,
   barrierDismissible: barrierDismissible,
   builder: (_) => _withOpenerDirection(
@@ -265,7 +265,7 @@ Future<bool?> showWarningDialog({
   String confirmText = 'איפוס',
   TextDirection? textDirection,
   bool barrierDismissible = true,
-}) => showAdaptiveDialog<bool>(
+}) => showOtzariaDialog<bool>(
   context: context,
   barrierDismissible: barrierDismissible,
   builder: (_) => _withOpenerDirection(

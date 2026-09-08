@@ -1,12 +1,12 @@
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:flutter/material.dart';
-import 'package:otzaria/utils/design_system.dart';
+import 'package:otzaria/theme/design_system.dart';
 
 /// Adaptive dialog wrapper that shows Material dialogs on non-Windows platforms
 /// and Fluent ContentDialog on Windows.
 ///
 /// This provides a consistent API while adapting to the platform design language.
-Future<T?> showAdaptiveDialog<T>({
+Future<T?> showOtzariaDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool barrierDismissible = true,
@@ -47,7 +47,6 @@ class AdaptiveAlertDialog extends StatelessWidget {
   final Widget? content;
   final List<Widget>? actions;
   final EdgeInsetsGeometry? contentPadding;
-  final ScrollController? scrollController;
 
   const AdaptiveAlertDialog({
     super.key,
@@ -55,7 +54,6 @@ class AdaptiveAlertDialog extends StatelessWidget {
     this.content,
     this.actions,
     this.contentPadding,
-    this.scrollController,
   });
 
   @override
@@ -76,7 +74,6 @@ class AdaptiveAlertDialog extends StatelessWidget {
       content: content,
       actions: actions,
       contentPadding: contentPadding,
-      scrollController: scrollController,
     );
   }
 }
