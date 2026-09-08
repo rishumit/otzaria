@@ -41,7 +41,9 @@ jobs:
           $clientId = '${{ secrets.GOOGLE_CALENDAR_CLIENT_ID }}'
           $clientSecret = '${{ secrets.GOOGLE_CALENDAR_CLIENT_SECRET }}'
           if ([string]::IsNullOrWhiteSpace($clientId) -or [string]::IsNullOrWhiteSpace($clientSecret)) {
-            throw "Google Calendar secrets are missing. Please set GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET."
+            Write-Host "::warning::Google Calendar secrets not set — writing stub credentials file"
+            $clientId = 'MISSING'
+            $clientSecret = 'MISSING'
           }
           $credentialsContent = @"
           class GoogleCalendarCredentials {
