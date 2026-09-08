@@ -3233,9 +3233,8 @@ class MainWindowScreenState extends State<MainWindowScreen>
                                         _isReadingSettingsPanelOpen,
                                   ),
                                 ),
-                              Expanded(
-                                child: OrientationBuilder(
-                                  builder: (context, orientation) {
+                              OrientationBuilder(
+                                builder: (context, orientation) {
                                     _handleOrientationChange(
                                       context,
                                       orientation,
