@@ -90,6 +90,9 @@ import 'package:otzaria/utils/ui/fullscreen_helper.dart';
 import 'package:otzaria/widgets/dialogs/app_dialogs.dart';
 import 'package:otzaria/widgets/navigation/nav_rail_column.dart';
 import 'package:otzaria/widgets/navigation/nav_rail_item.dart';
+import 'package:otzaria/widgets/navigation/fluent_nav_rail_column.dart';
+import 'package:otzaria/theme/design_system.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent show NavigationView, NavigationAppBar, NavigationPane, PaneDisplayMode, NavigationPaneSize;
 import 'package:otzaria/plugins/services/plugin_page_launcher.dart';
 import 'package:otzaria/plugins/services/plugin_runtime_dispatcher.dart';
 import 'package:otzaria/plugins/models/plugin_book_identity.dart';
@@ -3216,10 +3219,6 @@ class MainWindowScreenState extends State<MainWindowScreen>
                       resizeToAvoidBottomInset:
                           Platform.isAndroid || Platform.isIOS,
                       body: Stack(
-                        children: [
-                          Column(
-                            children: [
-                              if (!isImmersive)
                                 // מסגרת החלון יושבת מעל ה-scrim של פאנל הכלים;
                                 // Listener פסיבי סוגר בלי לחטוף את הלחיצה.
                                 Listener(
@@ -3434,14 +3433,33 @@ class MainWindowScreenState extends State<MainWindowScreen>
                                                                                             compact: isCompactRail,
                                                                                           ),
                                                                                       ];
-                                                                                  return NavRailColumn(
-                                                                                    items: topItems,
-                                                                                    bottomItem: _buildNavRailItem(
+                                                                                  final bottomWidget = _buildNavRailItem(
                                                                                       context,
                                                                                       _settingsNavIndex,
                                                                                       state.currentScreen,
                                                                                       compact: isCompactRail,
-                                                                                    ),
+                                                                                    );
+                                                                                  if (useFluentDesign) {
+                                                                                    return FluentNavRailColumn(
+                                                                                      items: topItems
+                                                                                          .whereType<
+                                                                                            NavRailItem
+                                                                                          >()
+                                                                                          .map(
+                                                                                            (
+                                                                                              w,
+                                                                                            ) =>
+                                                                                                w.toFluentItem(),
+                                                                                          )
+                                                                                          .toList(),
+                                                                                      bottomItem: (bottomWidget
+                                                                                              as NavRailItem)
+                                                                                          .toFluentItem(),
+                                                                                    );
+                                                                                  }
+                                                                                  return NavRailColumn(
+                                                                                    items: topItems,
+                                                                                    bottomItem: bottomWidget,
                                                                                   );
                                                                                 },
                                                                           );

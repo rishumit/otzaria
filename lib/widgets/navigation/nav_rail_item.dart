@@ -25,6 +25,8 @@ import 'package:flutter/material.dart';
 import 'package:otzaria_icons/otzaria_icons.dart';
 import 'package:otzaria/theme/app_tokens.dart';
 import 'package:otzaria/widgets/misc/rtl_icon.dart';
+import 'package:otzaria/widgets/navigation/fluent_nav_rail_column.dart'
+    show FluentNavRailItem;
 
 class NavRailItem extends StatelessWidget {
   /// רוחב הפריט במצב רגיל ובמצב קומפקטי. ה-SizedBox העוטף את הסרגל חייב
@@ -210,6 +212,23 @@ class NavRailItem extends StatelessWidget {
       key: ValueKey<bool>(isSelected),
       size: 24,
       color: color,
+    );
+  }
+
+  /// ממיר את ה-NavRailItem לנתוני FluentNavRailItem לשימוש ב-FluentNavRailColumn.
+  FluentNavRailItem toFluentItem() {
+    return FluentNavRailItem(
+      icon: icon,
+      iconFilled: iconFilled,
+      imageAsset: imageAsset,
+      label: label,
+      isSelected: isSelected,
+      onTap: onTap,
+      tooltip: tooltip,
+      tourTargetKey: tourTargetKey,
+      tourItemKey: tourItemKey,
+      isTourHighlighted: isTourHighlighted,
+      compact: compact,
     );
   }
 }
