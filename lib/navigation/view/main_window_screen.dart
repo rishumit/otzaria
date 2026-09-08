@@ -3593,7 +3593,6 @@ class MainWindowScreenState extends State<MainWindowScreen>
                                   },
                                 ),
                               ),
-                          ),
                           const WorkStatusOverlay(),
                           // host נסתר לתוספים שביקשו לרוץ ברקע עם עליית
                           // האפליקציה. הוא חי כל זמן שה-MainWindowScreen קיים,
