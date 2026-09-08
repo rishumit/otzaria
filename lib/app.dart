@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent;
+import 'package:otzaria/theme/design_system.dart';
 import 'package:otzaria/theme/theme_exports.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:otzaria/core/startup_timeline.dart';
@@ -31,6 +33,7 @@ class App extends StatelessWidget {
       builder: (context, settingsState) {
         StartupTimeline.instance.markOnce('appBuild');
         final state = settingsState;
+
         final lightColorScheme = AppThemeData.createColorScheme(
           state.seedColor,
           Brightness.light,
@@ -39,80 +42,154 @@ class App extends StatelessWidget {
           state.darkSeedColor,
           Brightness.dark,
         );
+        final materialTheme = AppThemeData.light(
+          lightColorScheme,
+          compactMenuMode: state.compactMenuMode,
+        );
+        final materialDarkTheme = AppThemeData.dark(
+          darkColorScheme,
+          compactMenuMode: state.compactMenuMode,
+        );
         final useVirtualWindowFrame =
             !kIsWeb &&
             (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          localizationsDelegates: const [
-            GlobalCupertinoLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale("he", "IL"),
-          ],
-          locale: const Locale("he", "IL"),
-          title: 'אוצריא',
-          theme: AppThemeData.light(
-            lightColorScheme,
-            compactMenuMode: state.compactMenuMode,
-          ),
-          darkTheme: AppThemeData.dark(
-            darkColorScheme,
-            compactMenuMode: state.compactMenuMode,
-          ),
-          themeMode: state.followSystemTheme
-              ? ThemeMode.system
-              : (state.isDarkMode ? ThemeMode.dark : ThemeMode.light),
-          builder: (context, child) {
-            // שפת ההגדרות זמינה לכל האפליקציה כדי שגם סרגל הניווט ופס
-            // הכותרת יתורגמו. הכיווניות נשארת RTL — רק מסך ההגדרות עובר
-            // ל-LTR מקומית.
-            Widget content = BlocSelector<SettingsBloc, SettingsState, String>(
-              selector: (state) => state.settingsLanguageCode,
-              builder: (context, languageCode) => SettingsTextScope(
-                language: resolveSettingsLanguage(languageCode),
-                child: child ?? const SizedBox.shrink(),
-              ),
-            );
 
-            // קביעת צבע אייקוני פס הסטטוס לפי התמה הפעילה.
-            // האפליקציה אינה משתמשת ב-AppBar רגיל, ולכן systemOverlayStyle
-            // לא נקבע אוטומטית — מגדירים אותו כאן כדי שהשעה והאייקונים
-            // יישארו נראים תמיד (בעיקר באנדרואיד במצב edge-to-edge).
-            if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              final overlayStyle = SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness: isDark
-                    ? Brightness.light
-                    : Brightness.dark,
-                statusBarBrightness: isDark
-                    ? Brightness.dark
-                    : Brightness.light,
-              );
-              content = AnnotatedRegion<SystemUiOverlayStyle>(
-                value: overlayStyle,
-                child: content,
-              );
-            }
+        if (useFluentDesign) {
+          return _buildFluentApp(
+            state: state,
+            materialTheme: materialTheme,
+            materialDarkTheme: materialDarkTheme,
+            useVirtualWindowFrame: useVirtualWindowFrame,
+          );
+        }
 
-            // גלילה אוטומטית בלחיצת גלגל העכבר — עטיפה אחת לכל האפליקציה,
-            // מתחת למסגרת החלון כדי שכפתורי המסגרת יישארו לחיצים.
-            content = MiddleClickAutoScroll(child: content);
-
-            if (!useVirtualWindowFrame) {
-              return content;
-            }
-
-            return VirtualWindowFrame(
-              child: content,
-            );
-          },
-          home: MainWindowScreen(key: mainWindowScreenKey),
+        return _buildMaterialApp(
+          state: state,
+          materialTheme: materialTheme,
+          materialDarkTheme: materialDarkTheme,
+          useVirtualWindowFrame: useVirtualWindowFrame,
         );
       },
     );
+  }
+
+  // ── Material (כל הפלטפורמות שאינן Windows Fluent) ──────────────────────
+  Widget _buildMaterialApp({
+    required SettingsState state,
+    required ThemeData materialTheme,
+    required ThemeData materialDarkTheme,
+    required bool useVirtualWindowFrame,
+  }) {
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      localizationsDelegates: const [
+        GlobalCupertinoLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('he', 'IL')],
+      locale: const Locale('he', 'IL'),
+      title: 'אוצריא',
+      theme: materialTheme,
+      darkTheme: materialDarkTheme,
+      themeMode: state.followSystemTheme
+          ? ThemeMode.system
+          : (state.isDarkMode ? ThemeMode.dark : ThemeMode.light),
+      builder: (context, child) =>
+          _appBuilder(context, child, useVirtualWindowFrame),
+      home: MainWindowScreen(key: mainWindowScreenKey),
+    );
+  }
+
+  // ── Fluent (Windows בלבד) ───────────────────────────────────────────────
+  //
+  // עוטפים את FluentApp ב-Theme(data: materialTheme) כדי ש-FluentApp יאמץ
+  // את ה-ThemeData הקיים דרך findAncestorWidgetOfExactType<m.Theme>().
+  // כך כל 763 קריאות Theme.of(context) ממשיכות לעבוד ללא שינוי, ומסכים
+  // שטרם הומרו נראים זהה לחלוטין.
+  Widget _buildFluentApp({
+    required SettingsState state,
+    required ThemeData materialTheme,
+    required ThemeData materialDarkTheme,
+    required bool useVirtualWindowFrame,
+  }) {
+    final isDark = state.followSystemTheme
+        ? (WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark)
+        : state.isDarkMode;
+    final activeTheme = isDark ? materialDarkTheme : materialTheme;
+
+    return Theme(
+      data: activeTheme,
+      child: fluent.FluentApp(
+        navigatorKey: navigatorKey,
+        localizationsDelegates: const [
+          fluent.FluentLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('he', 'IL')],
+        locale: const Locale('he', 'IL'),
+        title: 'אוצריא',
+        theme: fluent.FluentThemeData(
+          accentColor: fluent.AccentColor.swatch({
+            'darkest': activeTheme.colorScheme.primary.withValues(alpha: 0.4),
+            'darker': activeTheme.colorScheme.primary.withValues(alpha: 0.6),
+            'dark': activeTheme.colorScheme.primary.withValues(alpha: 0.8),
+            'normal': activeTheme.colorScheme.primary,
+            'light':
+                activeTheme.colorScheme.primaryContainer.withValues(alpha: 0.9),
+            'lighter': activeTheme.colorScheme.primaryContainer,
+            'lightest':
+                activeTheme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+          }),
+          brightness: isDark ? Brightness.dark : Brightness.light,
+        ),
+        builder: (context, child) =>
+            _appBuilder(context, child, useVirtualWindowFrame),
+        home: MainWindowScreen(key: mainWindowScreenKey),
+      ),
+    );
+  }
+
+  // ── builder משותף — Material ו-Fluent ──────────────────────────────────
+  Widget _appBuilder(
+    BuildContext context,
+    Widget? child,
+    bool useVirtualWindowFrame,
+  ) {
+    Widget content = BlocSelector<SettingsBloc, SettingsState, String>(
+      selector: (state) => state.settingsLanguageCode,
+      builder: (context, languageCode) => SettingsTextScope(
+        language: resolveSettingsLanguage(languageCode),
+        child: child ?? const SizedBox.shrink(),
+      ),
+    );
+
+    // קביעת צבע אייקוני פס הסטטוס לפי התמה הפעילה.
+    // האפליקציה אינה משתמשת ב-AppBar רגיל, ולכן systemOverlayStyle
+    // לא נקבע אוטומטית — מגדירים אותו כאן כדי שהשעה והאייקונים
+    // יישארו נראים תמיד (בעיקר באנדרואיד במצב edge-to-edge).
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final overlayStyle = SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      );
+      content = AnnotatedRegion<SystemUiOverlayStyle>(
+        value: overlayStyle,
+        child: content,
+      );
+    }
+
+    // גלילה אוטומטית בלחיצת גלגל העכבר — עטיפה אחת לכל האפליקציה,
+    // מתחת למסגרת החלון כדי שכפתורי המסגרת יישארו לחיצים.
+    content = MiddleClickAutoScroll(child: content);
+
+    if (!useVirtualWindowFrame) return content;
+
+    return VirtualWindowFrame(child: content);
   }
 }
