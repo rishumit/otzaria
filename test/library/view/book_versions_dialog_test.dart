@@ -1,0 +1,190 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:otzaria/library/view/book_versions_dialog.dart';
+import 'package:otzaria/models/book_version.dart';
+import 'package:otzaria/models/books.dart';
+
+Widget _wrap(Widget child) {
+  return MaterialApp(
+    home: Scaffold(body: child),
+  );
+}
+
+void main() {
+  final book = TextBook(title: 'כתובות');
+
+  const davidson = BookVersionInfo(
+    versionTitle: 'William Davidson Edition - Aramaic',
+    heVersionTitle: 'מהדורת דיווידסון - ארמית',
+    hasContent: true,
+  );
+  const wikisource = BookVersionInfo(
+    versionTitle: 'Wikisource Talmud Bavli',
+    heVersionTitle: 'תלמוד בבלי (ויקיטקסט)',
+    hasContent: true,
+  );
+
+  group('selectableVersionsFor', () {
+    test('בנוסח הממוזג כל המהדורות מוצעות', () {
+      expect(
+        selectableVersionsFor(const [davidson, wikisource], null),
+        [davidson, wikisource],
+      );
+    });
+
+    test('הנוסח שכבר פתוח אינו מוצע שוב', () {
+      expect(
+        selectableVersionsFor(const [
+          davidson,
+          wikisource,
+        ], davidson.versionTitle),
+        [wikisource],
+      );
+    });
+  });
+
+  group('רשימת הנוסחאות בדיאלוג', () {
+    tearDown(() => bookVersionsListProbeForTesting = null);
+
+    Future<void> pumpDialog(WidgetTester tester, TextBook book) async {
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showBookVersionsDialog(context, book),
+              child: const Text('פתח'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('פתח'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('כשהנוסח הפתוח הוא היחיד במאגר מוצג מצב ריק ולא רשימה', (
+      tester,
+    ) async {
+      bookVersionsListProbeForTesting = (_) async => const [davidson];
+
+      await pumpDialog(
+        tester,
+        book.copyWith(versionTitle: davidson.versionTitle),
+      );
+
+      expect(find.text('אין נוסחאות נוספות מלבד הנוסח הפתוח.'), findsOneWidget);
+      expect(find.text(davidson.displayTitle), findsNothing);
+    });
+
+    testWidgets('הנוסח הפתוח מסונן, והאחרים נשארים ברשימה', (tester) async {
+      bookVersionsListProbeForTesting = (_) async => const [
+        davidson,
+        wikisource,
+      ];
+
+      await pumpDialog(
+        tester,
+        book.copyWith(versionTitle: davidson.versionTitle),
+      );
+
+      expect(find.text(davidson.displayTitle), findsNothing);
+      expect(find.text(wikisource.displayTitle), findsOneWidget);
+    });
+
+    testWidgets('ספר בלי מידע גרסאות מציג מצב ריק', (tester) async {
+      bookVersionsListProbeForTesting = (_) async => const [];
+
+      await pumpDialog(tester, book);
+
+      expect(find.text('לא נמצא מידע על גרסאות לספר זה.'), findsOneWidget);
+    });
+  });
+
+  testWidgets('onSelected מקבל את הספר בנוסח שנבחר במקום לפתוח כרטיסייה', (
+    tester,
+  ) async {
+    TextBook? selected;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => Dialog(
+                  child: BookVersionTile(
+                    book: book,
+                    version: davidson,
+                    isOnlyVersion: false,
+                    onSelected: (target) => selected = target,
+                  ),
+                ),
+              ),
+              child: const Text('פתח'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('פתח'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('מהדורת דיווידסון - ארמית'));
+    await tester.pumpAndSettle();
+
+    expect(selected?.title, 'כתובות');
+    expect(selected?.versionTitle, davidson.versionTitle);
+  });
+
+  testWidgets('הערות גרסה עם HTML מוצגות כטקסט מרונדר ולא כתגיות גולמיות', (
+    tester,
+  ) async {
+    const notes =
+        'הטקסט הארמי מתוך <a href="https://www.korenpub.com/">מהדורת קורן</a> '
+        'עם ביאור מאת <a href="/adin-even-israel-steinsaltz">הרב שטיינזלץ</a>';
+    await tester.pumpWidget(
+      _wrap(
+        BookVersionTile(
+          book: book,
+          version: const BookVersionInfo(
+            versionTitle: 'William Davidson Edition - Aramaic',
+            heVersionTitle: 'מהדורת דיווידסון - ארמית',
+            heVersionNotes: notes,
+            hasContent: true,
+          ),
+          isOnlyVersion: false,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('a href', findRichText: true), findsNothing);
+    expect(
+      find.textContaining('מהדורת קורן', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('הרב שטיינזלץ', findRichText: true),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('גרסה ללא הערות מציגה רק את שורת הסטטוס', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        BookVersionTile(
+          book: book,
+          version: const BookVersionInfo(
+            versionTitle: 'Wikisource Talmud Bavli',
+            heVersionTitle: 'תלמוד בבלי (ויקיטקסט)',
+            hasContent: false,
+          ),
+          isOnlyVersion: false,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('טקסט הגרסה אינו כלול במאגר הנוכחי'), findsOneWidget);
+  });
+}

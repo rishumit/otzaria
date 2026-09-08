@@ -1,0 +1,334 @@
+name: Flutter Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7.0.1
+
+      # שימוש ב-channel stable + flutter-version קבוע, אחיד עם build-and-announce.yml.
+      # הגרסה ננעלת מפני שדרוגים אוטומטיים של pub/CI אחרי שחרור גרסת flutter יציבה חדשה.
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # חילול אינדקס חיפוש בהגדרות. ה-.g.dart נדחף לרפו, אבל הסקריפט הזה
+      # יוודא שהוא עדכני בכל הרצה (אם searchEntries השתנו במהלך ה-PR).
+      # ה-dart run הראשון מפעיל build hooks שמורידים נכסים נייטיביים, ולכן
+      # retry חל רק על כשל hooks כדי ששגיאת סקריפט תיכשל מיד.
+      - name: Generate settings search index
+        run: |
+          set +e
+
+          for attempt in 1 2 3; do
+            output=$(dart run tool/generate_search_index.dart 2>&1)
+            status=$?
+            printf '%s\n' "$output"
+
+            if [ "$status" -eq 0 ]; then
+              exit 0
+            fi
+
+            case "$output" in
+              *'Running build hooks failed'*) ;;
+              *) exit "$status" ;;
+            esac
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::בניית נכסים נייטיביים נכשלה (ניסיון $attempt מתוך 3) - ניסיון נוסף בעוד 15 שניות"
+              sleep 15
+            fi
+          done
+
+          echo "::error::בניית הנכסים הנייטיביים נכשלה בשלושה ניסיונות"
+          exit 1
+
+      - name: Generate settings translation catalog
+        run: dart run tool/generate_settings_l10n.dart
+
+      # מפרט ה-SDK לתוספים. --check נכשל אם spec.json שבדיסק מיושן, כדי
+      # שהוולידטורים החיצוניים לא יצרכו מפרט שאינו תואם את קוד האפליקציה.
+      - name: Check plugin SDK spec is fresh
+        run: dart run tool/plugins/generate_plugin_spec.dart --check
+
+      # ה-trinity של CLAUDE.md: analyze + test (פורמט נבדק locally בlint).
+      - name: Analyze
+        run: flutter analyze
+
+  test:
+    name: Test (shard ${{ matrix.shard }}/6)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # sanitizeQuery/splitQueryWords מאצילים ל-Rust דרך FRB,
+      # ו-flutter_test_config.dart טוען את הספרייה מ-rust/target שבחבילה.
+      # ה-cache מיוצר ב-warm_search_engine_cache.yml על ענף הבסיס.
+      - name: Cache search engine library
+        id: engine-cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.pub-cache/hosted/pub.dev/otzaria_search_engine-*/rust/target/release/libsearch_engine.so
+          # בלי restore-keys: .so מגרסה קודמת נכשל בבדיקת ה-content hash של FRB,
+          # והטסטים היו מדולגים בשקט במקום להיכשל.
+          key: ${{ runner.os }}-search-engine-lib-${{ hashFiles('pubspec.lock') }}
+
+      - name: Build search engine native library
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        run: |
+          pkg_root=$(jq -r '.packages[] | select(.name == "otzaria_search_engine") | .rootUri' .dart_tool/package_config.json)
+          pkg_root=${pkg_root#file://}
+          case "$pkg_root" in
+            /*) ;;
+            *) pkg_root=".dart_tool/$pkg_root" ;;
+          esac
+          echo "Building search engine at: $pkg_root"
+          cargo build --release --manifest-path "$pkg_root/rust/Cargo.toml"
+
+      # הטסטים תלויים בקבצים המחוללים, לכן החילול רץ גם בכל shard (~20 שניות).
+      - name: Generate settings search index
+        run: |
+          set +e
+
+          for attempt in 1 2 3; do
+            output=$(dart run tool/generate_search_index.dart 2>&1)
+            status=$?
+            printf '%s\n' "$output"
+
+            if [ "$status" -eq 0 ]; then
+              exit 0
+            fi
+
+            case "$output" in
+              *'Running build hooks failed'*) ;;
+              *) exit "$status" ;;
+            esac
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::בניית נכסים נייטיביים נכשלה (ניסיון $attempt מתוך 3) - ניסיון נוסף בעוד 15 שניות"
+              sleep 15
+            fi
+          done
+
+          echo "::error::בניית הנכסים הנייטיביים נכשלה בשלושה ניסיונות"
+          exit 1
+
+      - name: Generate settings translation catalog
+        run: dart run tool/generate_settings_l10n.dart
+
+      # הרצת הטסטים עם retry: אם הריצה הראשונה נכשלה, נחלץ את קבצי הטסט
+      # שנכשלו ונריץ אותם שוב. רק אם הם נכשלים גם בריצה השנייה - הסטפ נכשל.
+      - name: Run tests (with retry on failure)
+        run: |
+          set +e
+
+          # פיצול מפורש של רשימת הקבצים (round-robin על רשימה ממוינת) במקום
+          # --total-shards: הדגל מקמפל את כל הקבצים בכל shard והקומפילציה
+          # היא רוב הזמן, כך שהפיצול לא חסך כלום.
+          mapfile -t all_files < <(find test -name "*_test.dart" | sort)
+          shard_files=()
+          for i in "${!all_files[@]}"; do
+            if [ $((i % 6)) -eq ${{ matrix.shard }} ]; then
+              shard_files+=("${all_files[$i]}")
+            fi
+          done
+
+          echo "════════════════════════════════════════"
+          echo "ריצה ראשונה של הטסטים (shard ${{ matrix.shard }}/6, ${#shard_files[@]} מתוך ${#all_files[@]} קבצים)"
+          echo "════════════════════════════════════════"
+
+          flutter test --file-reporter json:test-results.json "${shard_files[@]}"
+          first_exit=$?
+
+          if [ $first_exit -eq 0 ]; then
+            echo "כל הטסטים עברו בהצלחה בריצה הראשונה"
+            exit 0
+          fi
+
+          if [ ! -s test-results.json ]; then
+            echo "::error::ריצת הטסטים נכשלה ולא הופק קובץ תוצאות (ייתכן שיש שגיאת קומפילציה)"
+            exit $first_exit
+          fi
+
+          # חילוץ קבצי הטסט שכללו לפחות טסט שנכשל.
+          # ממפים דרך suiteID→suite.path כי .test.url מצביע על widget_tester.dart
+          # כשטסט testWidgets נכשל בתוך קוד async של ה-framework.
+          failed_files=$(jq -rs '
+            (map(select(.type == "suite"))
+              | map({(.suite.id | tostring): .suite.path})
+              | add) as $suites
+            | (map(select(.type == "testStart"))
+              | map({(.test.id | tostring): .test})
+              | add) as $tests
+            | map(select(
+                .type == "testDone"
+                and (.result == "failure" or .result == "error")
+                and (.hidden | not)
+              ))
+            | map($suites[($tests[.testID | tostring].suiteID) | tostring] // empty)
+            | map(select(. != ""))
+            | unique
+            | .[]
+          ' test-results.json)
+
+          if [ -z "$failed_files" ]; then
+            echo "::error::הריצה הראשונה נכשלה אבל לא ניתן לחלץ רשימת קבצים שנכשלו"
+            exit $first_exit
+          fi
+
+          echo ""
+          echo "════════════════════════════════════════"
+          echo "ריצה ראשונה נכשלה. מריץ שוב את קבצי הטסט הבאים:"
+          echo "$failed_files" | sed 's/^/  /'
+          echo "════════════════════════════════════════"
+          echo ""
+
+          files_array=()
+          while IFS= read -r line; do
+            [ -n "$line" ] && files_array+=("$line")
+          done <<< "$failed_files"
+
+          # ה-retry רץ על רשימת קבצים מפורשת - בלי דגלי shard,
+          # כדי שהפיצול לא ישמיט חלק מהקבצים שנכשלו.
+          flutter test --file-reporter json:retry-results.json "${files_array[@]}"
+          second_exit=$?
+
+          if [ $second_exit -eq 0 ]; then
+            echo ""
+            echo "════════════════════════════════════════"
+            echo "כל הטסטים עברו בהצלחה בריצה השנייה (retry)"
+            echo "════════════════════════════════════════"
+            {
+              echo "## טסטים שעברו רק אחרי retry (shard ${{ matrix.shard }})"
+              echo ""
+              echo "$failed_files" | sed 's/^/- /'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # ריצה שנייה נכשלה גם - מדפיסים בדיוק מה נכשל
+          final_failed=$(jq -rs '
+            (map(select(.type == "suite"))
+              | map({(.suite.id | tostring): .suite.path})
+              | add) as $suites
+            | (map(select(.type == "testStart"))
+              | map({(.test.id | tostring): .test})
+              | add) as $tests
+            | map(select(
+                .type == "testDone"
+                and (.result == "failure" or .result == "error")
+                and (.hidden | not)
+              ))
+            | map($tests[.testID | tostring])
+            | map("- " + ($suites[.suiteID | tostring] // "unknown") + " :: " + .name)
+            | .[]
+          ' retry-results.json)
+
+          echo ""
+          echo "════════════════════════════════════════"
+          echo "טסטים שנכשלו גם אחרי retry:"
+          echo "════════════════════════════════════════"
+          echo "$final_failed"
+          echo "════════════════════════════════════════"
+
+          {
+            echo "## טסטים שנכשלו גם אחרי retry (shard ${{ matrix.shard }})"
+            echo ""
+            echo "$final_failed"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit $second_exit
+
+  # שער הבנייה היחיד ל-Windows על PR. עד עכשיו לא היה כזה: `analyze` ו-`test`
+  # רצים שניהם על ubuntu, ו-`webview2_smoke` מסונן ב-`paths`. המשמעות הייתה
+  # ששבירה בקוד הנייטיבי (windows/runner, רישום תוספים, cargokit) התגלתה רק
+  # אצל המפתח הבא שניסה לבנות מקומית.
+  build_windows:
+    name: Build (Windows)
+    runs-on: windows-2022
+    # מדידה מקומית: בנייה קרה 6 דקות. ראנר CI איטי יותר ומוסיף checkout,
+    # setup ו-pub get. 30 נותן מרווח בלי לתת ל-job תקוע לשרוף שעה שלמה.
+    # לכווץ אחרי הריצה הראשונה לפי הזמן שנמדד בפועל.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # ⚠️ חייב להתאים לשאר ה-jobs. `pubspec.lock` דורש Flutter >=3.47.0,
+          # ולכן עם 3.44.0 ה-job הזה נכשל ב-`pub get` ומעולם לא רץ ירוק.
+          flutter-version: 3.47.2
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # זה הצעד שבגללו ה-job קיים: MSBuild, רישום התוספים הנייטיביים
+      # ו-cargokit. debug ולא release — הוא מפעיל את אותה שרשרת נייטיבית
+      # בשבריר מהזמן, ובניית ה-release כבר מכוסה ב-build-and-announce.
+      - name: Build Windows (debug)
+        run: flutter build windows --debug
+
+      # ⚠️ הבנייה חייבת לקדום לבדיקות, ולא רק כדי לחסוך זמן:
+      # `test/support/search_engine_test_init.dart` מאתר את מנוע החיפוש
+      # בין השאר תחת `build/windows/x64/plugins/otzaria_search_engine/Debug`.
+      # בלי בנייה קודמת האתחול נכשל **בשקט**, וכל בדיקה שתלויה במנוע
+      # מדולגת בלי להיכשל — כלומר ה-job היה ירוק ולא בודק כלום.
+      #
+      # ההיקף מכוון וצר: הסוללה המלאה רצה על Linux ב-6 shards. כאן רצות
+      # רק הקבוצות שאומתו כירוקות ב-Windows (1,073 בדיקות), והקבוצות
+      # הידועות כתלויות-סביבה או flaky (migration, installer, personal_notes,
+      # tools/calendar) נשארות ל-Linux בלבד. הרחבת ההיקף מחייבת אימות
+      # מקומי ב-Windows קודם — אחרת ה-job נהיה רועש ומתחילים להתעלם ממנו.
+      - name: Run Windows-relevant tests
+        run: flutter test test/core/ test/tabs/ test/navigation/ test/workspaces/
+
+      # רץ גם בכישלון: כשהבנייה נופלת, הלוג של MSBuild הוא הדבר היחיד
+      # שמסביר למה — ההודעה ב-stdout מפנה לכיוון הלא נכון בדרך כלל.
+      - name: Upload build logs on failure
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: windows-build-logs
+          path: |
+            build/windows/x64/**/*.log
+            build/windows/x64/**/*.tlog
+          if-no-files-found: ignore
+          retention-days: 7
