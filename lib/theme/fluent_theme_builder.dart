@@ -18,8 +18,8 @@ class FluentThemeBuilder {
         highlightColor: accentColor.lightest,
         selectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
-          if (states.isPressing) return accentColor.dark;
-          if (states.isHovering) return accentColor.normal;
+          if (states.contains(fluent.WidgetState.pressed)) return accentColor.dark;
+          if (states.contains(fluent.WidgetState.hovered)) return accentColor.normal;
           return accentColor.normal;
         }),
         selectedTextStyle: fluent.WidgetStateProperty.resolveWith((states) {
@@ -32,8 +32,8 @@ class FluentThemeBuilder {
         }),
         unselectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
-          if (states.isPressing) return colorScheme.onSurface.withValues(alpha: 0.87);
-          if (states.isHovering) return colorScheme.onSurface.withValues(alpha: 0.87);
+          if (states.contains(fluent.WidgetState.pressed)) return colorScheme.onSurface.withValues(alpha: 0.87);
+          if (states.contains(fluent.WidgetState.hovered)) return colorScheme.onSurface.withValues(alpha: 0.87);
           return colorScheme.onSurfaceVariant;
         }),
       ),
@@ -41,8 +41,8 @@ class FluentThemeBuilder {
         defaultButtonStyle: fluent.ButtonStyle(
           backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
-            if (states.isPressing) return colorScheme.surfaceContainerHighest;
-            if (states.isHovering) return colorScheme.surfaceContainerHigh;
+            if (states.contains(fluent.WidgetState.pressed)) return colorScheme.surfaceContainerHighest;
+            if (states.contains(fluent.WidgetState.hovered)) return colorScheme.surfaceContainerHigh;
             return colorScheme.surfaceContainer;
           }),
           foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
@@ -53,8 +53,8 @@ class FluentThemeBuilder {
         filledButtonStyle: fluent.ButtonStyle(
           backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
-            if (states.isPressing) return accentColor.dark;
-            if (states.isHovering) return accentColor.normal;
+            if (states.contains(fluent.WidgetState.pressed)) return accentColor.dark;
+            if (states.contains(fluent.WidgetState.hovered)) return accentColor.normal;
             return accentColor.normal;
           }),
           foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
@@ -118,8 +118,8 @@ class FluentThemeBuilder {
         highlightColor: accentColor.lightest.withValues(alpha: 0.2),
         selectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
-          if (states.isPressing) return accentColor.light;
-          if (states.isHovering) return accentColor.lighter;
+          if (states.contains(fluent.WidgetState.pressed)) return accentColor.light;
+          if (states.contains(fluent.WidgetState.hovered)) return accentColor.lighter;
           return accentColor.lighter;
         }),
         selectedTextStyle: fluent.WidgetStateProperty.resolveWith((states) {
@@ -132,8 +132,8 @@ class FluentThemeBuilder {
         }),
         unselectedIconColor: fluent.WidgetStateProperty.resolveWith((states) {
           if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.38);
-          if (states.isPressing) return colorScheme.onSurface;
-          if (states.isHovering) return colorScheme.onSurface;
+          if (states.contains(fluent.WidgetState.pressed)) return colorScheme.onSurface;
+          if (states.contains(fluent.WidgetState.hovered)) return colorScheme.onSurface;
           return colorScheme.onSurfaceVariant;
         }),
       ),
@@ -141,8 +141,8 @@ class FluentThemeBuilder {
         defaultButtonStyle: fluent.ButtonStyle(
           backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
-            if (states.isPressing) return colorScheme.surfaceContainerHighest;
-            if (states.isHovering) return colorScheme.surfaceContainerHigh;
+            if (states.contains(fluent.WidgetState.pressed)) return colorScheme.surfaceContainerHighest;
+            if (states.contains(fluent.WidgetState.hovered)) return colorScheme.surfaceContainerHigh;
             return colorScheme.surfaceContainer;
           }),
           foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
@@ -153,8 +153,8 @@ class FluentThemeBuilder {
         filledButtonStyle: fluent.ButtonStyle(
           backgroundColor: fluent.WidgetStateProperty.resolveWith((states) {
             if (states.isDisabled) return colorScheme.onSurface.withValues(alpha: 0.12);
-            if (states.isPressing) return accentColor.light;
-            if (states.isHovering) return accentColor.normal;
+            if (states.contains(fluent.WidgetState.pressed)) return accentColor.light;
+            if (states.contains(fluent.WidgetState.hovered)) return accentColor.normal;
             return accentColor.normal;
           }),
           foregroundColor: fluent.WidgetStateProperty.resolveWith((states) {
