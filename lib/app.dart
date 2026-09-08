@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:otzaria/theme/design_system.dart';
 import 'package:otzaria/theme/fluent/accent_from_seed.dart';
+import 'package:otzaria/theme/fluent_theme_builder.dart';
 import 'package:otzaria/theme/theme_exports.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:otzaria/core/startup_timeline.dart';
@@ -119,6 +120,12 @@ class App extends StatelessWidget {
             Brightness.dark)
         : state.isDarkMode;
     final activeTheme = isDark ? materialDarkTheme : materialTheme;
+    final activeColorScheme = activeTheme.colorScheme;
+
+    // Build Fluent theme from Material ColorScheme for full consistency
+    final fluentTheme = isDark
+        ? FluentThemeBuilder.buildDarkTheme(activeColorScheme)
+        : FluentThemeBuilder.buildLightTheme(activeColorScheme);
 
     return Theme(
       data: activeTheme,
@@ -133,13 +140,7 @@ class App extends StatelessWidget {
         supportedLocales: const [Locale('he', 'IL')],
         locale: const Locale('he', 'IL'),
         title: 'אוצריא',
-        theme: fluent.FluentThemeData(
-          accentColor: accentFromSeed(
-            isDark ? state.darkSeedColor : state.seedColor,
-            isDark ? Brightness.dark : Brightness.light,
-          ),
-          brightness: isDark ? Brightness.dark : Brightness.light,
-        ),
+        theme: fluentTheme,
         builder: (context, child) =>
             _appBuilder(context, child, useVirtualWindowFrame),
         home: MainWindowScreen(key: mainWindowScreenKey),
