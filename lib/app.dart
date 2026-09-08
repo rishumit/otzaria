@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:otzaria/theme/design_system.dart';
+import 'package:otzaria/theme/fluent/accent_from_seed.dart';
 import 'package:otzaria/theme/theme_exports.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:otzaria/core/startup_timeline.dart';
@@ -133,17 +134,10 @@ class App extends StatelessWidget {
         locale: const Locale('he', 'IL'),
         title: 'אוצריא',
         theme: fluent.FluentThemeData(
-          accentColor: fluent.AccentColor.swatch({
-            'darkest': activeTheme.colorScheme.primary.withValues(alpha: 0.4),
-            'darker': activeTheme.colorScheme.primary.withValues(alpha: 0.6),
-            'dark': activeTheme.colorScheme.primary.withValues(alpha: 0.8),
-            'normal': activeTheme.colorScheme.primary,
-            'light':
-                activeTheme.colorScheme.primaryContainer.withValues(alpha: 0.9),
-            'lighter': activeTheme.colorScheme.primaryContainer,
-            'lightest':
-                activeTheme.colorScheme.primaryContainer.withValues(alpha: 0.6),
-          }),
+          accentColor: accentFromSeed(
+            isDark ? state.darkSeedColor : state.seedColor,
+            isDark ? Brightness.dark : Brightness.light,
+          ),
           brightness: isDark ? Brightness.dark : Brightness.light,
         ),
         builder: (context, child) =>
